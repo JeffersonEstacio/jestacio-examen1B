@@ -1,30 +1,37 @@
-const datos = require('./controlador/datos');
+const argv = require("./config/config").argv;
+const colors = require("colors");
+const obtenerData = require("./controlador/datos").obtenerData;
+const guardarData = require("./controlador/datos").crearArchivo;
 
-const argv = require('yargs').options({
-    archivo: {
-        alias: 'f',
-        desc: 'Permite establecer el path del archivo CSV que contiene los datos a analizar',
-        demand: true
-    },
-    pais: {
-        default: true,
-        alias: 'c',
-        desc: 'Permite determinar el país a analizar a través de su código ISO 3166 ALPHA-3.',
-    },
-    anio: {
-        default: true,
-        alias: 'y',
-        desc: 'Permite especificar el año para el cual se requiere las estadísticas.',
+const run = async() => {
+    info = await obtenerData(argv.pais, argv.anio.toString(), argv.archivo);
+    opciones();
+    return info;
+};
+let info;
+
+const opciones = () => {
+    let comando = argv._[0];
+    switch (comando) {
+        case "mostrar":
+            console.log("=====================================================".green);
+            console.log(`Personas que usan internet (% de la poblacion)`.yellow);
+            console.log(`Pais: ${argv.pais}`.green);
+            console.log(`Año: ${argv.anio}`.green);
+            console.log(`Valor: ${info.porcentaje} %`.red);
+        case "guardar":
+            guardarData(info, argv.pais, argv.anio)
+                .then((mensaje) => console.log(colors.green(mensaje)))
+                .catch((err) => console.log(colors.red(err)));
+            break;
+        default:
+            console.log("El comando no existe");
+            break;
     }
+};
 
-}).argv;
-
-let pais = argv.pais
-let anio = argv.anio
-
-datos.getDatos(pais, anio)
-    .then(respuesta => {
-        console.log(`El codigo equivale al pais ${pais} y el año es ${anio}`);
-    }).catch(err => {
+run()
+    .then()
+    .catch((err) => {
         console.log(err);
     });
